@@ -6,16 +6,61 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct ContentView: View {
+    @State private var imageLoaderViewModel = ImageLoaderViewModel()
+    @State private var showLibrary = false
+    @State private var showCamera = false
+    @State private var imageToDisplay: Image?
+    
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+            ZStack {
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(height: 300)
+                if let imageToDisplay = imageToDisplay {
+                    imageToDisplay
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 300)
+                        .clipped()
+                }
+            }
+            Text("No image detected")
+                .font(.system(size: 15, weight: .semibold))
+                .padding(.top)
+            Group {
+                Button(action: {
+                    showLibrary = true
+                }, label: {
+                    Text("Find Image")
+                })
+                .buttonStyle(PrimaryButtonStyle())
+                .padding(.top, 20)
+                Button(action: {
+                    showCamera = true
+                }, label: {
+                    Text("Take Photo")
+                })
+                .buttonStyle(PrimaryButtonStyle())
+            }
+            .padding(.horizontal)
+            Spacer()
         }
-        .padding()
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { image in
+                
+                imageToDisplay = Image(uiImage: image)
+            }
+        }
+        .onChange(of: imageLoaderViewModel.imageToUpload, { _, newValue in
+            if let newValue = newValue {
+                imageToDisplay = Image(uiImage: newValue)
+            }
+        })
+        .photosPicker(isPresented: $showLibrary, selection: $imageLoaderViewModel.imageSelection, matching: .images, photoLibrary: .shared())
     }
 }
 
