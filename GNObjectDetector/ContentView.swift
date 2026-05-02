@@ -10,6 +10,7 @@ import PhotosUI
 
 struct ContentView: View {
     @State private var imageLoaderViewModel = ImageLoaderViewModel()
+    @State var viewModel = ContentViewModel()
     @State private var showLibrary = false
     @State private var showCamera = false
     @State private var imageToDisplay: Image?
@@ -51,13 +52,14 @@ struct ContentView: View {
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { image in
-                
                 imageToDisplay = Image(uiImage: image)
+                viewModel.detectObject(image: image)
             }
         }
         .onChange(of: imageLoaderViewModel.imageToUpload, { _, newValue in
             if let newValue = newValue {
                 imageToDisplay = Image(uiImage: newValue)
+                viewModel.detectObject(image: newValue)
             }
         })
         .photosPicker(isPresented: $showLibrary, selection: $imageLoaderViewModel.imageSelection, matching: .images, photoLibrary: .shared())
