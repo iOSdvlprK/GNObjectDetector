@@ -10,9 +10,19 @@ import Vision
 
 @Observable
 class ContentViewModel {
-    // image request handler: VNImageRequestHandler
+    var imageAnalysisRequest: VNCoreMLRequest?
+    // 1. image request handler: VNImageRequestHandler
+    // 2. image analysis request: VNCoreMLRequest
     
-    // image analysis request: VNCoreMLRequest
+    init() {
+        let config = MLModelConfiguration()
+        guard let resnet = try? Resnet50(configuration: config) else { return }
+        let resnetModel = resnet.model
+        guard let resnetVNCoreMLModel = try? VNCoreMLModel(for: resnetModel) else { return }
+        self.imageAnalysisRequest = VNCoreMLRequest(model: resnetVNCoreMLModel) { request, error in
+            
+        }
+    }
     
     func detectObject(image: UIImage) {
         guard let ciImage = CIImage(image: image) else {
@@ -20,6 +30,11 @@ class ContentViewModel {
             return
         }
         let handler = VNImageRequestHandler(ciImage: ciImage)
-        
+        guard let imageAnalysisRequest else { return }
+        do {
+            try handler.perform([imageAnalysisRequest])
+        } catch {
+            print("DEBUG: failed to perform image analysis request")
+        }
     }
 }
